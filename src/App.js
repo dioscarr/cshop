@@ -1,9 +1,20 @@
 import React, { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Navbar from './components/Navbar';
+import Logo from './components/Logo'; // Added Logo import
 import './App.css';
 import BarberList from './BarberList';
 import ServiceList from './ServiceList';
 import ConfirmationPage from './ConfirmationPage';
 import DateTimePicker from './DateTimePicker';
+import Dashboard from './components/management/Dashboard';
+import ManageAppointments from './components/management/ManageAppointments';
+import { AuthProvider } from './contexts/AuthContext';
+import Login from './components/management/Login';
+import Layout from './components/management/Layout';
+import ManageBarbers from './components/management/ManageBarbers';
+import ManageServices from './components/management/ManageServices';
+import Reports from './components/management/Reports';
 
 function App() {
   const [selectedBarber, setSelectedBarber] = useState(null);
@@ -12,15 +23,109 @@ function App() {
   const [currentStep, setCurrentStep] = useState(1);
 
   const barbers = [
-    { id: 1, name: 'Barber 1', description: 'Experienced barber', availability: ['10:00', '11:00', '14:00', '15:00'] },
-    { id: 2, name: 'Barber 2', description: 'Skilled in modern hairstyles', availability: ['09:00', '10:00', '13:00', '14:00'] },
-    { id: 3, name: 'Barber 3', description: 'Specializes in beard grooming', availability: ['11:00', '12:00', '15:00', '16:00'] },
+    { 
+      id: 1, 
+      name: 'James Wilson', 
+      description: 'Master Barber with 15+ years of experience specializing in classic cuts and hot towel shaves.',
+      expertise: ['Classic Cuts', 'Razor Fades', 'Hot Towel Shaves'],
+      rating: 4.9,
+      reviews: 127,
+      image: 'https://images.pexels.com/photos/1805600/pexels-photo-1805600.jpeg?auto=compress&cs=tinysrgb&w=400',
+      availability: ['10:00', '11:00', '14:00', '15:00']
+    },
+    { 
+      id: 2, 
+      name: 'Michael Chen', 
+      description: 'Contemporary stylist known for modern techniques and precision fades.',
+      expertise: ['Modern Styles', 'Design Cuts', 'Textured Crops'],
+      rating: 4.8,
+      reviews: 98,
+      image: 'https://images.pexels.com/photos/3998429/pexels-photo-3998429.jpeg?auto=compress&cs=tinysrgb&w=400',
+      availability: ['09:00', '10:00', '13:00', '14:00']
+    },
+    { 
+      id: 3, 
+      name: 'David Rodriguez', 
+      description: 'Beard specialist and styling expert with a passion for traditional barbering.',
+      expertise: ['Beard Styling', 'Scissor Work', 'Traditional Cuts'],
+      rating: 4.9,
+      reviews: 156,
+      image: 'https://images.pexels.com/photos/2076930/pexels-photo-2076930.jpeg?auto=compress&cs=tinysrgb&w=400',
+      availability: ['11:00', '12:00', '15:00', '16:00']
+    }
   ];
 
   const services = [
-    { id: 1, name: 'Haircut', price: 20, duration: 30 },
-    { id: 2, name: 'Beard Trim', price: 10, duration: 15 },
-    { id: 3, name: 'Shave', price: 15, duration: 15 },
+    { 
+      id: 1, 
+      name: 'Classic Haircut', 
+      price: 30, 
+      duration: 45,
+      description: 'Complete haircut service including consultation, shampoo, precision cut, and styling. Includes hot towel neck shave.'
+    },
+    { 
+      id: 2, 
+      name: 'Beard Trim & Shape', 
+      price: 25, 
+      duration: 30,
+      description: 'Expert beard grooming including trim, shape, and line-up. Hot towel and premium oils included for the perfect finish.'
+    },
+    { 
+      id: 3, 
+      name: 'Royal Shave', 
+      price: 35, 
+      duration: 45,
+      description: 'Luxurious hot towel straight razor shave with premium products. Includes facial massage and moisturizing treatment.'
+    },
+    { 
+      id: 4, 
+      name: 'Hair & Beard Combo', 
+      price: 50, 
+      duration: 75,
+      description: 'Our most popular package combines our classic haircut with a full beard trim and style. Perfect for a complete refresh.'
+    },
+    { 
+      id: 5, 
+      name: 'Express Cut', 
+      price: 20, 
+      duration: 20,
+      description: 'Quick trim and touch-up for maintaining your current style. Perfect for busy professionals on a lunch break.'
+    },
+    { 
+      id: 6, 
+      name: 'Kids Cut', 
+      price: 20, 
+      duration: 30,
+      description: 'Gentle and patient service for children under 12. Includes fun chair and lollipop.'
+    },
+    { 
+      id: 7, 
+      name: 'Senior Cut', 
+      price: 25, 
+      duration: 45,
+      description: 'Careful attention to detail for our senior clients. Includes neck massage and styling.'
+    },
+    { 
+      id: 8, 
+      name: 'Head Shave', 
+      price: 30, 
+      duration: 30,
+      description: 'Clean head shave using straight razor and hot towels. Includes scalp massage and moisturizing treatment.'
+    },
+    { 
+      id: 9, 
+      name: 'Buzz Cut', 
+      price: 20, 
+      duration: 20,
+      description: 'Quick and precise all-over clipper cut to your preferred length. Includes clean edges and neck trim.'
+    }
+  ];
+
+  const steps = [
+    { number: 1, title: "Select Service" },
+    { number: 2, title: "Choose Barber" },
+    { number: 3, title: "Pick Date & Time" },
+    { number: 4, title: "Confirm Booking" }
   ];
 
   const selectBarber = (barber) => {
@@ -45,47 +150,176 @@ function App() {
     setCurrentStep(1);
   };
 
+  const canNavigateToStep = (stepNumber) => {
+    switch (stepNumber) {
+      case 1:
+        return true; // Can always go back to first step
+      case 2:
+        return selectedService !== null; // Need service selected
+      case 3:
+        return selectedService !== null && selectedBarber !== null; // Need both service and barber
+      case 4:
+        return selectedService !== null && selectedBarber !== null && selectedDateTime !== null; // Need all selections
+      default:
+        return false;
+    }
+  };
+
+  const handleStepClick = (stepNumber) => {
+    if (canNavigateToStep(stepNumber)) {
+      setCurrentStep(stepNumber);
+    }
+  };
+
+  const getStepSummary = (stepNumber) => {
+    switch (stepNumber) {
+      case 1:
+        return selectedService ? `Service: ${selectedService.name}` : "Choose a service";
+      case 2:
+        return selectedBarber ? `Barber: ${selectedBarber.name}` : "Pick your barber";
+      case 3:
+        return selectedDateTime ? `Date & Time: ${new Date(selectedDateTime).toLocaleString()}` : "Schedule your appointment";
+      case 4:
+        return "Finalize your reservation"; // No specific summary for confirmation
+      default:
+        return "";
+    }
+  };
+
   return (
-    <div className="App">
-      <h1>Barbershop Portal</h1>
-      {currentStep === 1 && (
-        <div>
-          <h2>Select a Service</h2>
-          <ServiceList services={services} selectService={selectService} />
-        </div>
-      )}
-      {currentStep === 2 && (
-        <div>
-          <h2>Select a Barber</h2>
-          <BarberList barbers={barbers} selectBarber={selectBarber} />
-        </div>
-      )}
-      {currentStep === 3 && selectedService && (
-        <div>
-          <h2>Select a Barber</h2>
-          <BarberList barbers={barbers} selectBarber={selectBarber} />
-        </div>
-      )}
-      {currentStep === 4 && (
-        <ConfirmationPage
-          selectedBarber={selectedBarber}
-          selectedService={selectedService}
-          selectedDateTime={selectedDateTime}
-          resetSelection={resetSelection}
-          setCurrentStep={setCurrentStep} // Pass setCurrentStep as a prop
-        />
-      )}
-      {currentStep === 3 && selectedService && selectedBarber && (
-        <div>
-          <h2>Select a Date and Time</h2>
-          <DateTimePicker
-            selectDateTime={selectDateTime}
-            barberAvailability={selectedBarber.availability}
-            serviceDuration={selectedService.duration}
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/manage/login" element={<Login />} />
+          <Route path="/manage/*" element={
+            <Layout>
+              <Routes>
+                <Route index element={<Dashboard />} />
+                <Route path="appointments" element={<ManageAppointments />} />
+                <Route 
+                  path="barbers" 
+                  element={<ManageBarbers barbers={barbers} />} 
+                />
+                <Route 
+                  path="services" 
+                  element={<ManageServices services={services} />} 
+                />
+                <Route path="reports" element={<Reports />} />
+              </Routes>
+            </Layout>
+          } />
+          <Route 
+            path="/" 
+            element={
+              <div className="min-h-screen bg-gray-50">
+                <header className="bg-white shadow-sm">
+                  <div className="container mx-auto px-4 py-4 flex items-center border-b">
+                    <Logo />
+                    <h1 className="text-2xl font-bold text-gray-800 ml-4">
+                      BookCut Appointments
+                    </h1>
+                  </div>
+                  <div className="container mx-auto px-4 py-3">
+                    <div className="flex flex-wrap items-center justify-center lg:justify-between gap-2 lg:gap-0 max-w-7xl mx-auto">
+                      {steps.map((step) => (
+                        <div key={step.number} 
+                          className="flex items-center flex-[1_1_150px] sm:flex-[1_1_180px] lg:flex-1 max-w-[200px] lg:max-w-none"
+                        >
+                          <div className="flex items-center min-w-0 flex-1">
+                            <button
+                              onClick={() => handleStepClick(step.number)}
+                              disabled={!canNavigateToStep(step.number)}
+                              className={`flex items-center group space-x-2 min-w-0 w-full ${
+                                !canNavigateToStep(step.number) 
+                                  ? 'cursor-not-allowed opacity-60' 
+                                  : 'cursor-pointer hover:opacity-80'
+                              }`}
+                            >
+                              <div className={`w-8 h-8 md:w-10 md:h-10 shrink-0 rounded-full flex items-center justify-center transition-all duration-200 ${
+                                currentStep === step.number 
+                                  ? 'bg-blue-500 text-white ring-4 ring-blue-100' 
+                                  : currentStep > step.number 
+                                    ? 'bg-green-500 text-white'
+                                    : 'bg-gray-200 text-gray-600'
+                              }`}>
+                                {currentStep > step.number ? (
+                                  <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                  </svg>
+                                ) : (
+                                  step.number
+                                )}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs md:text-sm font-medium text-gray-900 truncate">
+                                  {step.title}
+                                </p>
+                                <p className="text-[10px] md:text-xs text-gray-500 truncate">
+                                  {getStepSummary(step.number)}
+                                </p>
+                                {/* Mobile summary - only show when there's a selection */}
+                                {step.number !== 4 && (
+                                  <p className="text-[10px] text-gray-500 truncate sm:hidden">
+                                    {step.number === 1 && selectedService ? selectedService.name : ''}
+                                    {step.number === 2 && selectedBarber ? selectedBarber.name : ''}
+                                    {step.number === 3 && selectedDateTime ? new Date(selectedDateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                                  </p>
+                                )}
+                              </div>
+                            </button>
+                          </div>
+                          {step.number < 4 && (
+                            <div className="flex-shrink-0 mx-2 w-8 md:w-12 hidden lg:block">
+                              <div className={`h-0.5 w-full ${
+                                currentStep > step.number ? 'bg-green-500' : 'bg-gray-200'
+                              }`}></div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </header>
+                
+                <main className="container mx-auto px-3 py-4">
+                  {currentStep === 1 && (
+                    <ServiceList services={services} selectService={selectService} />
+                  )}
+                  
+                  {currentStep === 2 && (
+                    <div>
+                      <h2 className="text-xl font-medium mb-4">Choose Your Barber</h2>
+                      <BarberList barbers={barbers} selectBarber={selectBarber} />
+                    </div>
+                  )}
+                  
+                  {currentStep === 3 && selectedService && selectedBarber && (
+                    <div>
+                      <h2 className="text-xl font-medium mb-4">Pick Date & Time</h2>
+                      <DateTimePicker
+                        selectDateTime={selectDateTime}
+                        barberAvailability={selectedBarber.availability}
+                        serviceDuration={selectedService.duration}
+                      />
+                    </div>
+                  )}
+                  
+                  {currentStep === 4 && (
+                    <ConfirmationPage
+                      selectedBarber={selectedBarber}
+                      selectedService={selectedService}
+                      selectedDateTime={selectedDateTime}
+                      resetSelection={resetSelection}
+                      setCurrentStep={setCurrentStep}
+                    />
+                  )}
+                </main>
+              </div>
+            } 
           />
-        </div>
-      )}
-    </div>
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
 

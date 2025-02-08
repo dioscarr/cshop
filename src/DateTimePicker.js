@@ -4,9 +4,31 @@ const DateTimePicker = ({ selectDateTime, barberAvailability, serviceDuration })
     const [selectedDate, setSelectedDate] = useState('');
     const [selectedTime, setSelectedTime] = useState('');
 
-    const toInputDateStr = (date) => {
-        return date.toISOString().split('T')[0];
+    const formatDateLabel = (date) => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const dateToCheck = new Date(date);
+        dateToCheck.setHours(0, 0, 0, 0);
+        
+        const diffDays = Math.floor((dateToCheck - today) / (1000 * 60 * 60 * 24));
+        const fullDate = dateToCheck.toLocaleDateString('en-US', { 
+            weekday: 'short', 
+            month: 'short', 
+            day: 'numeric' 
+        });
+        
+        switch (diffDays) {
+            case 0:
+                return `Today (${fullDate})`;
+            case 1:
+                return `Tomorrow (${fullDate})`;
+            case 2:
+                return `In 2 days (${fullDate})`;
+            default:
+                return `In ${diffDays} days (${fullDate})`;
+        }
     };
+
     const handleTimeChange = (event) => {
         setSelectedTime(event.target.value);
     };
@@ -24,69 +46,114 @@ const DateTimePicker = ({ selectDateTime, barberAvailability, serviceDuration })
     const generateTimeSlots = () => {
         const timeSlots = [];
         const dates = [];
+        const now = new Date();
         const today = new Date();
-        const tomorrow = new Date();
-        tomorrow.setDate(today.getDate() + 1);
-        const dayAfterTomorrow = new Date();
-        dayAfterTomorrow.setDate(today.getDate() + 2);
-
-        const startTime = new Date();
-        startTime.setHours(10); // Set the starting hour
-        startTime.setMinutes(0); // Set the starting minute
-      
-        const endTime = new Date();
-        endTime.setHours(22); // Set the closing hour
-        endTime.setMinutes(0); // Set the closing minute
-      
-        while (startTime < endTime) {
-          const timeSlot = startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-          timeSlots.push(timeSlot);
-          startTime.setMinutes(startTime.getMinutes() + 30); // Increment by 30 minutes
+        
+        // Generate next 5 days
+        for (let i = 0; i < 5; i++) {
+            const date = new Date();
+            date.setDate(today.getDate() + i);
+            dates.push(date);
         }
 
-        dates.push(today.toLocaleDateString());
-        dates.push(tomorrow.toLocaleDateString());
-        dates.push(dayAfterTomorrow.toLocaleDateString());
+        // Generate time slots
+        const startTime = new Date();
+        startTime.setHours(10, 0, 0); // Start at 10 AM
+        const endTime = new Date();
+        endTime.setHours(22, 0, 0); // End at 10 PM
 
-        const formattedToday = toInputDateStr(today);
-        const formattedTomorrow = toInputDateStr(tomorrow);
-        const formattedDayAfterTomorrow = toInputDateStr(dayAfterTomorrow);
+        // If it's today, filter out past times
+        const currentTime = now.getHours() * 60 + now.getMinutes();
+        
+        while (startTime < endTime) {
+            const timeSlot = startTime.toLocaleTimeString([], { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: true 
+            });
+            
+            const slotTime = startTime.getHours() * 60 + startTime.getMinutes();
+            
+            if (selectedDate === today.toISOString().split('T')[0]) {
+                // Only add future time slots for today
+                if (slotTime > currentTime) {
+                    timeSlots.push(timeSlot);
+                }
+            } else {
+                timeSlots.push(timeSlot);
+            }
+            
+            startTime.setMinutes(startTime.getMinutes() + 30);
+        }
 
-        return { timeSlots, dates: [formattedToday, formattedTomorrow, formattedDayAfterTomorrow] };
+        return { 
+            timeSlots, 
+            dates: dates.map(date => ({
+                value: date.toISOString().split('T')[0],
+                label: formatDateLabel(date)
+            }))
+        };
     };
 
+    const slots = generateTimeSlots();
+
     return (
-        <div>
-        <label htmlFor="date">Date:</label>
-        <input
-            type="date"
-            id="date"
-            value={selectedDate}
-            onChange={(event) => handleDateChange(event.target.value)}
-        />
+        <div className="container mx-auto px-3 py-4">
+            <div className="max-w-md mx-auto bg-white rounded-lg shadow-sm p-4">
+                <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-600 mb-2">Select Date:</label>
+                    <div className="flex flex-wrap gap-2">
+                        {slots.dates.map(({ value, label }) => (
+                            <button
+                                key={value}
+                                onClick={() => handleDateChange(value)}
+                                className={`flex-1 min-w-[150px] py-2 px-3 text-sm rounded-md transition-all ${
+                                    selectedDate === value
+                                        ? 'bg-blue-500 text-white'
+                                        : 'bg-gray-50 hover:bg-gray-100 text-gray-700'
+                                }`}
+                            >
+                                {label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
 
-        <div>
-            {generateTimeSlots().dates.map((dateStr) => (
-                <button
-                    key={dateStr}
-                    onClick={() => handleDateChange(dateStr)}
+                {selectedDate && (
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-600 mb-2">
+                            Select Time:
+                        </label>
+                        <div className="grid grid-cols-3 gap-2">
+                            {slots.timeSlots.map((timeSlot) => (
+                                <button
+                                    key={timeSlot}
+                                    onClick={() => handleTimeChange({ target: { value: timeSlot } })}
+                                    className={`py-2 px-3 text-sm rounded-md transition-all ${
+                                        selectedTime === timeSlot
+                                            ? 'bg-blue-500 text-white'
+                                            : 'bg-gray-50 hover:bg-gray-100 text-gray-700'
+                                    }`}
+                                >
+                                    {timeSlot}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                <button 
+                    onClick={handleDateTimeSelection}
+                    disabled={!selectedDate || !selectedTime}
+                    className={`w-full py-2 px-4 rounded-md text-sm transition-all ${
+                        selectedDate && selectedTime
+                            ? 'bg-blue-500 hover:bg-blue-600 text-white'
+                            : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    }`}
                 >
-                    {dateStr}
+                    Confirm Date and Time
                 </button>
-            ))}
-        </div>
-
-            <label htmlFor="time">Time:</label>
-            <select id="time" value={selectedTime} onChange={handleTimeChange}>
-                <option value="">Select a time</option>
-                {generateTimeSlots().timeSlots.map((timeSlot) => (
-                    <option key={timeSlot} value={timeSlot}>
-                        {timeSlot}
-                    </option>
-                ))}
-            </select>
-
-            <button onClick={handleDateTimeSelection}>Select Date and Time</button>
+            </div>
         </div>
     );
 };
