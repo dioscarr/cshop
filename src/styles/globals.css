@@ -1,0 +1,45 @@
+:root {
+  --mocha: #8B7355;
+  --lavender: #E6E6FA;
+  --verdant: #3CB371;
+  --sunny: #FFD700;
+  --crisp-white: #FFFFFF;
+  --terracotta: #E2725B;
+  --navy: #000080;
+  --muted-rose: #DEB0B0;
+  
+  --main-color: var(--terracotta);
+  --background: var(--crisp-white);
+  --foreground: #000000;
+  --muted: var(--muted-rose);
+  --muted-foreground: #666666;
+  --popover: var(--crisp-white);
+  --card: var(--crisp-white);
+  --border: var(--lavender);
+  --input: var(--crisp-white);
+  --primary: var(--main-color);
+  --primary-foreground: var(--crisp-white);
+  --secondary: var(--lavender);
+  --secondary-foreground: var(--navy);
+  --accent: var(--mocha);
+  --accent-foreground: var(--crisp-white);
+  --ring: var(--main-color);
+}
+
+[data-theme='dark'] {
+  --background: var(--navy);
+  --foreground: var(--crisp-white);
+  --muted: var(--muted-rose);
+  --muted-foreground: var(--lavender);
+  --popover: #1a1a2e;
+  --card: #1a1a2e;
+  --border: var(--mocha);
+  --input: #1a1a2e;
+  --primary: var(--terracotta);
+  --primary-foreground: var(--crisp-white);
+  --secondary: var(--mocha);
+  --secondary-foreground: var(--crisp-white);
+  --accent: var(--lavender);
+  --accent-foreground: var(--navy);
+  --ring: var(--terracotta);
+}

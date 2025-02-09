@@ -18,6 +18,7 @@ const Layout = ({ children }) => {
           <Link to="/manage/appointments" className="block px-4 py-2 hover:bg-gray-50">Appointments</Link>
           <Link to="/manage/barbers" className="block px-4 py-2 hover:bg-gray-50">Barbers</Link>
           <Link to="/manage/services" className="block px-4 py-2 hover:bg-gray-50">Services</Link>
+          <Link to="/manage/payments" className="block px-4 py-2 hover:bg-gray-50">Payment History</Link>
           <Link to="/manage/reports" className="block px-4 py-2 hover:bg-gray-50">Reports</Link>
           <button 
             onClick={() => {
