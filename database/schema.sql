@@ -1,3 +1,16 @@
+-- Drop existing tables in correct order (respect foreign keys)
+DROP TABLE IF EXISTS cart_items CASCADE;
+DROP TABLE IF EXISTS order_items CASCADE;
+DROP TABLE IF EXISTS orders CASCADE;
+DROP TABLE IF EXISTS appointments CASCADE;
+DROP TABLE IF EXISTS services CASCADE;
+DROP TABLE IF EXISTS barbers CASCADE;
+DROP TABLE IF EXISTS products CASCADE;
+DROP TABLE IF EXISTS user_profiles CASCADE;
+
+-- Enable UUID extension if not already enabled
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 -- Create products table
 CREATE TABLE products (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
@@ -53,12 +66,52 @@ CREATE TABLE cart_items (
     UNIQUE(user_id, product_id)
 );
 
+-- Create appointments table
+CREATE TABLE appointments (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    user_id UUID REFERENCES user_profiles(id),
+    barber_id UUID NOT NULL,
+    service_id UUID NOT NULL,
+    appointment_date TIMESTAMP WITH TIME ZONE NOT NULL,
+    status VARCHAR NOT NULL DEFAULT 'pending',
+    customer_name VARCHAR NOT NULL,
+    customer_email VARCHAR NOT NULL,
+    customer_phone VARCHAR,
+    notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
+);
+
+-- Create barbers table
+CREATE TABLE barbers (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    name VARCHAR NOT NULL,
+    bio TEXT,
+    image_url TEXT,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
+);
+
+-- Create services table
+CREATE TABLE services (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    name VARCHAR NOT NULL,
+    description TEXT,
+    duration INTEGER NOT NULL, -- duration in minutes
+    price DECIMAL(10,2) NOT NULL,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
+);
+
 -- Create RLS policies
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE cart_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE appointments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE barbers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE services ENABLE ROW LEVEL SECURITY;
 
 -- Products policies
 CREATE POLICY "Products are viewable by everyone" ON products
@@ -91,3 +144,33 @@ CREATE POLICY "Users can view their own order items" ON order_items
 -- Cart items policies
 CREATE POLICY "Users can manage their own cart" ON cart_items
     FOR ALL USING (auth.uid() = user_id);
+
+-- Drop existing appointments policies first
+DROP POLICY IF EXISTS "Users can view their own appointments" ON appointments;
+DROP POLICY IF EXISTS "Users can create their own appointments" ON appointments;
+DROP POLICY IF EXISTS "Users can create appointments without auth" ON appointments;
+DROP POLICY IF EXISTS "Users can view their appointments by email" ON appointments;
+
+-- Create new simplified policies for appointments
+CREATE POLICY "Allow public to create appointments"
+    ON appointments FOR INSERT
+    WITH CHECK (true);  -- Allow anyone to create appointments
+
+CREATE POLICY "Allow public to view appointments"
+    ON appointments FOR SELECT
+    USING (true);  -- Allow anyone to view appointments for now
+
+CREATE POLICY "Allow public to update appointments"
+    ON appointments FOR UPDATE
+    USING (true)
+    WITH CHECK (true);
+
+-- Make sure RLS is enabled
+ALTER TABLE appointments ENABLE ROW LEVEL SECURITY;
+
+-- Barbers and Services are publicly viewable
+CREATE POLICY "Barbers are viewable by everyone" ON barbers
+    FOR SELECT USING (is_active = true);
+
+CREATE POLICY "Services are viewable by everyone" ON services
+    FOR SELECT USING (is_active = true);
