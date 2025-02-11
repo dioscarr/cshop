@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>BookCut API Explorer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui.min.css">
+    <style>
+        body { margin: 0; background: #fafafa; }
+        .swagger-ui .topbar { background: #1a1a1a; }
+        .swagger-ui .info { margin: 30px 0; }
+        .swagger-ui .scheme-container { background: #fff; }
+        .swagger-ui .opblock.opblock-get { background: rgba(97,175,254,.1); }
+        .swagger-ui .opblock.opblock-post { background: rgba(73,204,144,.1); }
+    </style>
+</head>
+<body>
+    <div id="swagger-ui"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui-bundle.min.js"></script>
+    <script>
+        window.onload = () => {
+            const ui = SwaggerUIBundle({
+                url: '/docs/swagger.json',
+                dom_id: '#swagger-ui',
+                deepLinking: true,
+                presets: [
+                    SwaggerUIBundle.presets.apis,
+                    SwaggerUIBundle.SwaggerUIStandalonePreset
+                ],
+                layout: "BaseLayout",
+                theme: {
+                    primaryColor: '#4f46e5'
+                }
+            });
+            window.ui = ui;
+        };
+    </script>
+</body>
+</html>

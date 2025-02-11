@@ -7,6 +7,7 @@ DROP TABLE IF EXISTS services CASCADE;
 DROP TABLE IF EXISTS barbers CASCADE;
 DROP TABLE IF EXISTS products CASCADE;
 DROP TABLE IF EXISTS user_profiles CASCADE;
+DROP TABLE IF EXISTS admin_codes CASCADE;
 
 -- Enable UUID extension if not already enabled
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -32,6 +33,27 @@ CREATE TABLE user_profiles (
     phone VARCHAR,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
+);
+
+-- Create barbers table (moved up)
+CREATE TABLE barbers (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    name VARCHAR NOT NULL,
+    bio TEXT,
+    image_url TEXT,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
+);
+
+-- Create services table (moved up)
+CREATE TABLE services (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    name VARCHAR NOT NULL,
+    description TEXT,
+    duration INTEGER NOT NULL, -- duration in minutes
+    price DECIMAL(10,2) NOT NULL,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
 );
 
 -- Create orders table
@@ -66,12 +88,12 @@ CREATE TABLE cart_items (
     UNIQUE(user_id, product_id)
 );
 
--- Create appointments table
+-- Create appointments table (now after barbers and services)
 CREATE TABLE appointments (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     user_id UUID REFERENCES user_profiles(id),
-    barber_id UUID NOT NULL,
-    service_id UUID NOT NULL,
+    barber_id UUID REFERENCES barbers(id) NOT NULL,
+    service_id UUID REFERENCES services(id) NOT NULL,
     appointment_date TIMESTAMP WITH TIME ZONE NOT NULL,
     status VARCHAR NOT NULL DEFAULT 'pending',
     customer_name VARCHAR NOT NULL,
@@ -82,26 +104,18 @@ CREATE TABLE appointments (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
 );
 
--- Create barbers table
-CREATE TABLE barbers (
+-- Create admin codes table
+CREATE TABLE admin_codes (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-    name VARCHAR NOT NULL,
-    bio TEXT,
-    image_url TEXT,
+    code VARCHAR NOT NULL UNIQUE,
     is_active BOOLEAN DEFAULT true,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()),
+    expires_at TIMESTAMP WITH TIME ZONE
 );
 
--- Create services table
-CREATE TABLE services (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-    name VARCHAR NOT NULL,
-    description TEXT,
-    duration INTEGER NOT NULL, -- duration in minutes
-    price DECIMAL(10,2) NOT NULL,
-    is_active BOOLEAN DEFAULT true,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
-);
+-- Insert default admin code (replace 'your-secure-code' with actual code)
+INSERT INTO admin_codes (code, is_active, expires_at)
+VALUES ('ADMIN123', true, TIMEZONE('utc'::text, NOW()) + INTERVAL '30 days');
 
 -- Create RLS policies
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
@@ -112,6 +126,7 @@ ALTER TABLE cart_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE appointments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE barbers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE services ENABLE ROW LEVEL SECURITY;
+ALTER TABLE admin_codes ENABLE ROW LEVEL SECURITY;
 
 -- Products policies
 CREATE POLICY "Products are viewable by everyone" ON products
@@ -165,6 +180,10 @@ CREATE POLICY "Allow public to update appointments"
     USING (true)
     WITH CHECK (true);
 
+-- Add policy for admin codes
+CREATE POLICY "Allow anonymous to verify admin codes" ON admin_codes
+    FOR SELECT USING (is_active = true AND expires_at > NOW());
+
 -- Make sure RLS is enabled
 ALTER TABLE appointments ENABLE ROW LEVEL SECURITY;
 
@@ -174,3 +193,32 @@ CREATE POLICY "Barbers are viewable by everyone" ON barbers
 
 CREATE POLICY "Services are viewable by everyone" ON services
     FOR SELECT USING (is_active = true);
+
+-- Update the admin bookings query policy
+CREATE POLICY "Allow public to view appointments with joins"
+    ON appointments FOR SELECT
+    USING (true);
+
+-- Clear existing services
+TRUNCATE TABLE services CASCADE;
+
+-- Insert comprehensive service list
+INSERT INTO services (id, name, description, duration, price, is_active)
+VALUES 
+  (uuid_generate_v4(), 'Classic Haircut', 'Traditional haircut with precision trimming and styling', 30, 35.00, true),
+  (uuid_generate_v4(), 'Luxury Beard Trim', 'Premium beard grooming including hot towel and conditioning', 25, 25.00, true),
+  (uuid_generate_v4(), 'Full Service Package', 'Complete haircut and beard grooming with premium products', 60, 55.00, true),
+  (uuid_generate_v4(), 'Kids Haircut', 'Child-friendly haircut service (12 and under)', 20, 25.00, true),
+  (uuid_generate_v4(), 'Senior Cut', 'Specialized service for our distinguished clients', 30, 30.00, true),
+  (uuid_generate_v4(), 'Head Shave', 'Clean head shave with hot towel treatment', 35, 40.00, true),
+  (uuid_generate_v4(), 'Hair & Scalp Treatment', 'Deep conditioning treatment with scalp massage', 45, 45.00, true),
+  (uuid_generate_v4(), 'Express Cut', 'Quick trim and style for busy professionals', 15, 25.00, true),
+  (uuid_generate_v4(), 'Fade & Design', 'Custom fade with optional design work', 45, 50.00, true),
+  (uuid_generate_v4(), 'VIP Complete Service', 'Premium package including cut, beard, and hair treatment', 90, 85.00, true);
+
+-- Insert sample barbers
+INSERT INTO barbers (id, name, bio, is_active)
+VALUES 
+  (uuid_generate_v4(), 'John Doe', 'Master barber with 10 years experience', true),
+  (uuid_generate_v4(), 'Jane Smith', 'Specialist in modern styles', true),
+  (uuid_generate_v4(), 'Mike Johnson', 'Expert in classic cuts', true);
