@@ -1,10 +1,17 @@
 import { Card } from '@/components/ui/card'
-import { Scissors, Beard, Ruler, Timer } from 'lucide-react'
-import type { Service } from '@/types/database.types'
+import { Scissors, User, Ruler, Timer } from 'lucide-react'
+
+interface Service {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  duration: number;
+}
 
 const serviceIcons = {
   'Classic Haircut': Scissors,
-  'Beard Trim & Shape': Beard,
+  'Beard Trim & Shape': User,
   'Royal Shave': Ruler,
   'Hair & Beard Combo': Scissors,
   // fallback icon

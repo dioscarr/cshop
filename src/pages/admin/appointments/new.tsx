@@ -1,18 +1,18 @@
 import { useEffect, useState } from 'react'
 import { AppointmentForm } from '@/components/admin/AppointmentForm'
 import { createClient } from '@supabase/supabase-js'
-import { useRouter } from 'next/router'
+import { useNavigate } from 'react-router-dom'
 
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  import.meta.env.VITE_SUPABASE_URL!,
+  import.meta.env.VITE_SUPABASE_ANON_KEY!
 )
 
 export default function NewAppointmentPage() {
   alert('New Appointment Page loaded')
-  const [barbers, setBarbers] = useState([])
-  const [services, setServices] = useState([])
-  const router = useRouter()
+  const [barbers, setBarbers] = useState<any[]>([])
+  const [services, setServices] = useState<any[]>([])
+  const navigate = useNavigate()
 
   useEffect(() => {
     const fetchData = async () => {
@@ -33,7 +33,7 @@ export default function NewAppointmentPage() {
       <AppointmentForm
         barbers={barbers}
         services={services}
-        onSuccess={() => router.push('/admin/appointments')}
+        onSuccess={() => navigate('/admin/appointments')}
       />
     </div>
   )

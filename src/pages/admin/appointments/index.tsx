@@ -1,17 +1,17 @@
 import { Button } from '@/components/ui/button'
-import { useRouter } from 'next/router'
+import { useNavigate } from 'react-router-dom'
 import { createClient } from '@supabase/supabase-js'
 import { useState, useEffect } from 'react'
 
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  import.meta.env.VITE_SUPABASE_URL!,
+  import.meta.env.VITE_SUPABASE_ANON_KEY!
 )
 
 export default function AdminAppointmentsPage() {
   alert('Admin Appointments Page loaded')
-  const router = useRouter()
-  const [appointments, setAppointments] = useState([])
+  const navigate = useNavigate()
+  const [appointments, setAppointments] = useState<any[]>([])
 
   useEffect(() => {
     fetchAppointments()
@@ -35,7 +35,7 @@ export default function AdminAppointmentsPage() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Appointments</h1>
         <Button 
-          onClick={() => router.push('/admin/appointments/new')}
+          onClick={() => navigate('/admin/appointments/new')}
           className="bg-[var(--main-color)] hover:bg-[var(--main-color)]/80 
             transition-all duration-300 ease-in-out
             shadow-md hover:shadow-lg transform hover:-translate-y-0.5

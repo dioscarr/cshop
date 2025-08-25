@@ -5,4 +5,10 @@
 
 
 
-}  )    </div>      // ...existing code...    <div className="space-y-2 text-foreground"> {/* Added text-foreground class */}  return (export default function StepsSummary() {
+export default function StepsSummary() {
+  return (
+    <div className="space-y-2 text-foreground">
+      {/* Steps summary content will go here */}
+    </div>
+  );
+}
