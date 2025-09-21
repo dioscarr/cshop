@@ -1,4 +1,3 @@
-import React from 'react';
 import { Outlet, useRouteError, Link, useLocation } from 'react-router-dom';
 import { HomeIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 

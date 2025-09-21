@@ -1,5 +1,12 @@
 import { ServiceCard } from './ServiceCard'
-import type { Service } from '@/types/database.types'
+
+interface Service {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  duration: number;
+}
 
 interface ServiceListProps {
   services: Service[]

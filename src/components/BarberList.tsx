@@ -1,5 +1,18 @@
 import { Card } from "@/components/ui/card"
-import Image from "next/image"
+
+interface Barber {
+  id: string;
+  name: string;
+  image_url: string;
+  description: string;
+  rating: number;
+  reviews: number;
+}
+
+interface BarberListProps {
+  barbers: Barber[];
+  onSelect: (barber: Barber) => void;
+}
 
 export function BarberList({ barbers, onSelect }: BarberListProps) {
   return (
@@ -11,12 +24,10 @@ export function BarberList({ barbers, onSelect }: BarberListProps) {
           onClick={() => onSelect(barber)}
         >
           <div className="relative w-full h-48">
-            <Image
+            <img
               src={barber.image_url}
               alt={barber.name}
-              fill
-              className="object-cover"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="w-full h-full object-cover"
             />
           </div>
           <div className="p-4 space-y-2">

@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button'
-import Link from 'next/link'
+import { Link } from 'react-router-dom'
 
 export default function BookingSuccessPage() {
   alert('Booking Success Page loaded')
@@ -10,10 +10,10 @@ export default function BookingSuccessPage() {
         Thank you for your booking. We have sent you a confirmation email with the details.
       </p>
       <div className="space-x-4">
-        <Link href="/dashboard">
-          <Button variant="default">View My Bookings</Button>
+        <Link to="/dashboard">
+          <Button variant="primary">View My Bookings</Button>
         </Link>
-        <Link href="/">
+        <Link to="/">
           <Button variant="outline">Back to Home</Button>
         </Link>
       </div>
